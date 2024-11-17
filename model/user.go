@@ -12,11 +12,11 @@ import(
 //user model
 type User struct{
 	gorm.Model
-	ID			unit		`gorm:"primary_key"`
-	RoleID		unit		`gorm:"not null; DEFAULT:3" json:"role_id"`
+	ID			uint		`gorm:"primary_key"`
+	RoleID		uint		`gorm:"not null; DEFAULT:3" json:"role_id"`
 	Username	string		`gorm:"size:255; not null; unique" json:"email"`
 	Email       string		`gorm:"size:255;not null; unique" json:"email"`
-	password	string		`gorm:"size:255;not null" json:"-"`
+	Password	string		`gorm:"size:255;not null" json:"-"`
 	Role		Role 		`gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"json:"-"`		
 }
 
@@ -31,11 +31,11 @@ func (user *User) Save() (*User, error){
 
 //Generate encrypted password
 func (user *User) BeforeSave(*gorm.DB) error{
-	passwordHash, err:= bcrypt.GenerateFromPassword([]byte(user.password), bcrypt.DefaultCost)
+	passwordHash, err:= bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err!=nil{
 		return err
 	}
-	user.password= string(passwordHash)
+	user.Password= string(passwordHash)
 	user.Username=html.EscapeString(strings.TrimSpace(user.Username))
 	return nil
 }
@@ -51,11 +51,20 @@ func GetUsers(User *[]User)(err error){
 //Validate user password
 
 func (user *User) ValidateUserPassword( password string) error{
-	return bcrypt.CompareHashAndPassword([]byte(user.password),[]byte(password))
+	return bcrypt.CompareHashAndPassword([]byte(user.Password),[]byte(password))
 
 }
 
 
+// Get user by username
+func GetUserByUsername(username string) (User, error) {
+	var user User
+	err := database.Db.Where("username=?", username).Find(&user).Error
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}
 
 //Get user by id
 func GetUserById(id uint)(User, error){
@@ -67,8 +76,18 @@ func GetUserById(id uint)(User, error){
 	}
 	return user,nil
 }
-//Update user
 
+// Get user by id
+func GetUser(User *User, id int) (err error) {
+	err = database.Db.Where("id = ?", id).First(User).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
+//Update user
 func UpdateUser(User *User)(err error){
 	err = database.Db.Omit("password").Updates(User).Error
 	if err!=nil{
