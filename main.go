@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ChanchalS7/practice_api/controller"
 	"github.com/ChanchalS7/practice_api/database"
 	"github.com/ChanchalS7/practice_api/model"
 	"github.com/gin-gonic/gin"
@@ -82,6 +83,11 @@ func seedData() {
 // Start the application server
 func serveApplication() {
 	router := gin.Default()
+	authRoutes:=router.Group("/aut/user")
+	//registration route
+	authRoutes.POST("/register",controller.Register)
+	//login routes
+	authRoutes.POST("/login",controller.Login)
 	router.Run(":8080")
 	fmt.Println("Server running on port 8080")
 }
